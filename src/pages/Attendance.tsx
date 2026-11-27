@@ -123,8 +123,8 @@ function AttendanceSheet({ title, subtitle, groupLabel, apiType }: {
             {list.length === 0 && (
               <li className="p-10 text-center text-sm text-slate-400">
                 {apiType === 'students'
-                  ? 'No students enrolled yet. Add courses, batches, and students first.'
-                  : 'No staff members added yet. Add staff members first.'}
+                  ? 'No students enrolled on or before this date.'
+                  : 'No staff members joined on or before this date.'}
               </li>
             )}
           </ul>

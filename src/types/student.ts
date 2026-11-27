@@ -32,6 +32,8 @@ export interface Student {
   admissionDate: string
   totalFees: number
   discount: number
+  paid?: number
+  remainingFees?: number
   status: StudentStatus
   photo?: string
   payments: Payment[]

@@ -4,7 +4,8 @@ import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { StatCard } from '../components/ui/StatCard'
 import { useToast } from '../components/ui/Toast'
-import type { Course, Fee, Student } from '../data/mock'
+import type { Course, Fee } from '../data/mock'
+import type { Student } from '../types/student'
 import { useApiList } from '../hooks/useOptions'
 import { api } from '../lib/api'
 import { fmtDate, money, today } from '../lib/utils'
@@ -20,11 +21,66 @@ export default function Fees() {
   const courseList = useApiList<Course>('/courses')
   const liveCourseNames = courseList.map((c) => c.name)
 
+  const resolveFeeDefaults = (studentName?: string, courseName?: string) => {
+    const s = studentList.find((x) => x.name === studentName)
+    const effectiveCourse = courseName || s?.course || liveCourseNames[0] || ''
+    const c = courseList.find((x) => x.name === effectiveCourse)
+
+    let total: number | '' = ''
+    let paid = 0
+
+    // Prefer student enrollment data (net = totalFees - discount)
+    if (s && s.totalFees !== undefined) {
+      const net = Math.max(0, Number(s.totalFees) - Number(s.discount || 0))
+      if (net > 0) {
+        total = net
+        paid = Number(s.paid || 0)
+      }
+    }
+    // Fall back to course base fee
+    if (total === '' && c?.fee) {
+      total = c.fee
+    }
+
+    return {
+      student: studentName || (studentList[0]?.name ?? ''),
+      course: effectiveCourse,
+      total,
+      paid,
+    }
+  }
+
   return (
     <CrudPage<Fee>
       title="Fees" subtitle="Track student fee plans and collections" entity="Fee" idPrefix="FEE"
       initial={[]} searchKeys={['student', 'id', 'course']} defaults={{ dueDate: today(), paid: 0 }} onSaved={recompute}
       apiPath="/fees"
+      onOpenNew={(f) => {
+        const studentName = f.student || studentList[0]?.name
+        const resolved = resolveFeeDefaults(studentName, f.course)
+        return {
+          student: resolved.student,
+          course: resolved.course,
+          total: resolved.total,
+          paid: resolved.paid,
+        }
+      }}
+      onFormChange={(name, value, _currentForm) => {
+        if (name === 'student') {
+          const resolved = resolveFeeDefaults(value, undefined)
+          return {
+            course: resolved.course,
+            total: resolved.total,
+            paid: resolved.paid,
+          }
+        }
+        if (name === 'course') {
+          const c = courseList.find((x) => x.name === value)
+          if (c?.fee) {
+            return { total: c.fee }
+          }
+        }
+      }}
       filters={[{ key: 'status', label: 'Status', options: ['Paid', 'Partial', 'Overdue'] }, { key: 'course', label: 'Courses', options: liveCourseNames }]}
       stats={(rows) => (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

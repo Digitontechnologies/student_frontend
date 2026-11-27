@@ -40,7 +40,8 @@ export default function Dashboard() {
   const [data, setData] = useState<DashStats | null>(null)
 
   useEffect(() => {
-    api.get<DashStats>('/dashboard/stats').then(setData).catch(() => setData(EMPTY))
+    // Add cache-busting timestamp to avoid stale data
+    api.get<DashStats>(`/dashboard/stats?_=${Date.now()}`).then(setData).catch(() => setData(EMPTY))
   }, [])
 
   if (!data) {

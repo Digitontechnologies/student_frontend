@@ -16,6 +16,7 @@ export type FormField = {
   options?: string[]
   required?: boolean
   full?: boolean
+  helper?: ReactNode | ((form: Record<string, any>) => ReactNode)
 }
 
 type Row = Record<string, any> & { id: string }
@@ -23,6 +24,7 @@ type Row = Record<string, any> & { id: string }
 export function CrudPage<T extends Row>({
   title, subtitle, entity, idPrefix, initial, columns, fields, filters, searchKeys,
   stats, headerExtra, rowActions, viewRender, defaults, onSaved, apiPath,
+  onOpenNew, onFormChange,
 }: {
   title: string
   subtitle: string
@@ -41,18 +43,22 @@ export function CrudPage<T extends Row>({
   onSaved?: (row: T) => T
   /** If provided, CRUD operations use the backend API at this path (e.g. '/students'). */
   apiPath?: string
+  /** Hook to customize or pre-fetch defaults when opening Add modal */
+  onOpenNew?: (defaultValues: Record<string, any>) => Record<string, any>
+  /** Hook to react when any field in the form changes (e.g. student selection auto-fills course & fees) */
+  onFormChange?: (fieldName: string, value: any, currentForm: Record<string, any>) => Record<string, any> | void
 }) {
   const toast = useToast()
 
   // ── API mode state ────────────────────────────────────────────────────────
-  const apiHook = apiPath ? useApi<T>(apiPath) : null
-  const isApi = !!apiHook
-  const apiLoading = apiHook?.loading ?? false
-  const apiError = apiHook?.error ?? null
+  const isApi = Boolean(apiPath)
+  const apiHook = useApi<T>(apiPath || '')
+  const apiLoading = isApi && apiHook.loading
+  const apiError = isApi ? apiHook.error : null
 
   // Local state — seeded from API data or from initial prop
   const [localRows, setLocalRows] = useState<T[]>(initial)
-  const rows = isApi ? (apiHook?.data ?? []) : localRows
+  const rows = isApi ? apiHook.data : localRows
 
   // Keep local rows in sync when initial changes (non-API mode)
   useEffect(() => {
@@ -67,8 +73,11 @@ export function CrudPage<T extends Row>({
   const [saving, setSaving] = useState(false)
 
   const openNew = () => {
-    const f: Record<string, any> = { ...defaults }
+    let f: Record<string, any> = { ...defaults }
     fields.forEach((x) => { if (f[x.name] === undefined) f[x.name] = x.type === 'select' ? x.options?.[0] ?? '' : '' })
+    if (onOpenNew) {
+      f = { ...f, ...onOpenNew(f) }
+    }
     setForm(f); setEditing(null); setCreating(true)
   }
   const openEdit = (r: T) => {
@@ -79,6 +88,15 @@ export function CrudPage<T extends Row>({
     setForm(f); setEditing(r); setCreating(true)
   }
   const close = () => { setCreating(false); setEditing(null); setSaving(false) }
+
+  const handleFieldChange = (name: string, val: any) => {
+    let next = { ...form, [name]: val }
+    if (onFormChange) {
+      const updates = onFormChange(name, val, next)
+      if (updates) next = { ...next, ...updates }
+    }
+    setForm(next)
+  }
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -190,11 +208,16 @@ export function CrudPage<T extends Row>({
             <div key={f.name} className={f.full || f.type === 'textarea' ? 'sm:col-span-2' : ''}>
               <Field label={f.label + (f.required ? ' *' : '')}>
                 {f.type === 'select' ? (
-                  <Select options={f.options ?? []} required={f.required} value={form[f.name] ?? ''} onChange={(e) => setForm({ ...form, [f.name]: e.target.value })} />
+                  <Select options={f.options ?? []} required={f.required} value={form[f.name] ?? ''} onChange={(e) => handleFieldChange(f.name, e.target.value)} />
                 ) : f.type === 'textarea' ? (
-                  <Textarea required={f.required} value={form[f.name] ?? ''} onChange={(e) => setForm({ ...form, [f.name]: e.target.value })} />
+                  <Textarea required={f.required} value={form[f.name] ?? ''} onChange={(e) => handleFieldChange(f.name, e.target.value)} />
                 ) : (
-                  <Input type={f.type ?? 'text'} required={f.required} value={form[f.name] ?? ''} onChange={(e) => setForm({ ...form, [f.name]: e.target.value })} />
+                  <Input type={f.type ?? 'text'} required={f.required} value={form[f.name] ?? ''} onChange={(e) => handleFieldChange(f.name, e.target.value)} />
+                )}
+                {f.helper && (
+                  <div className="mt-1 text-xs text-slate-500">
+                    {typeof f.helper === 'function' ? f.helper(form) : f.helper}
+                  </div>
                 )}
               </Field>
             </div>

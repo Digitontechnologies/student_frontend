@@ -150,16 +150,53 @@ export default function StudentProfile() {
       </Card>
 
       <Modal open={modal === 'edit'} onClose={() => setModal(null)} wide title={`Edit ${s.name}`}>
-        <StudentForm student={s} onCancel={() => setModal(null)} onSubmit={(v) => { updateStudent(s.id, v); toast('Student updated'); setModal(null) }} />
+        <StudentForm
+          student={s}
+          onCancel={() => setModal(null)}
+          onSubmit={async (v) => {
+            try {
+              await updateStudent(s.id, v)
+              toast('Student updated')
+              setModal(null)
+            } catch (err: any) {
+              toast(err.message || 'Could not update student')
+            }
+          }}
+        />
       </Modal>
       <Modal open={modal === 'pay'} onClose={() => setModal(null)} title="Record payment">
-        <PaymentForm pending={pending} onCancel={() => setModal(null)} onSubmit={(p) => { addPayment(s.id, p); toast(`Payment of ${money(p.amount)} recorded`); setModal(null) }} />
+        <PaymentForm
+          pending={pending}
+          onCancel={() => setModal(null)}
+          onSubmit={async (p) => {
+            try {
+              await addPayment(s.id, p)
+              toast(`Payment of ${money(p.amount)} recorded`)
+              setModal(null)
+            } catch (err: any) {
+              toast(err.message || 'Could not record payment')
+            }
+          }}
+        />
       </Modal>
       <Modal open={modal === 'delete'} onClose={() => setModal(null)} title="Delete student">
         <p className="text-sm text-slate-600">Delete <b>{s.name}</b> ({s.id})? Their payment and attendance history will be removed. This cannot be undone.</p>
         <div className="mt-5 flex justify-end gap-2">
           <Button variant="secondary" onClick={() => setModal(null)}>Cancel</Button>
-          <Button variant="danger" onClick={() => { deleteStudent(s.id); toast('Student deleted'); navigate('/students') }}>Delete</Button>
+          <Button
+            variant="danger"
+            onClick={async () => {
+              try {
+                await deleteStudent(s.id)
+                toast('Student deleted')
+                navigate('/students')
+              } catch (err: any) {
+                toast(err.message || 'Could not delete student')
+              }
+            }}
+          >
+            Delete
+          </Button>
         </div>
       </Modal>
     </>

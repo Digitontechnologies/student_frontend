@@ -10,6 +10,10 @@ export function useApi<T extends { id: string }>(path: string) {
   pathRef.current = path
 
   const fetchData = useCallback(async () => {
+    if (!pathRef.current) {
+      setLoading(false)
+      return
+    }
     setLoading(true)
     setError(null)
     try {

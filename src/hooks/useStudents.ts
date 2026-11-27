@@ -94,6 +94,10 @@ export function useStudents() {
       address: v.address.trim(),
       parentName: v.parentName.trim(),
       parentPhone: v.parentPhone.trim(),
+      course: v.course,
+      batch: v.batch,
+      totalFees: Number(v.totalFees),
+      discount: Number(v.discount || 0),
       status: v.status,
       photo: v.photo || undefined,
     })
