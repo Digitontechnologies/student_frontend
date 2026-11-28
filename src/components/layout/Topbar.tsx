@@ -39,7 +39,7 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Jump to a page…"
-          className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-10 pr-3 text-sm outline-none focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-100"
+          className="w-full rounded-xl border border-[#E7EAF0] bg-slate-50 py-2 pl-10 pr-3 text-sm outline-none focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-50"
         />
         <datalist id="pages">{allNav.map((n) => <option key={n.to} value={n.label} />)}</datalist>
       </form>

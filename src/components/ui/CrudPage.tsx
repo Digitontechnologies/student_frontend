@@ -24,7 +24,7 @@ type Row = Record<string, any> & { id: string }
 export function CrudPage<T extends Row>({
   title, subtitle, entity, idPrefix, initial, columns, fields, filters, searchKeys,
   stats, headerExtra, rowActions, viewRender, defaults, onSaved, apiPath,
-  onOpenNew, onFormChange,
+  onOpenNew, onFormChange, onEditClick, onAddClick,
 }: {
   title: string
   subtitle: string
@@ -47,6 +47,10 @@ export function CrudPage<T extends Row>({
   onOpenNew?: (defaultValues: Record<string, any>) => Record<string, any>
   /** Hook to react when any field in the form changes (e.g. student selection auto-fills course & fees) */
   onFormChange?: (fieldName: string, value: any, currentForm: Record<string, any>) => Record<string, any> | void
+  /** Optional custom handler when clicking Edit on a row (replaces default Edit modal) */
+  onEditClick?: (row: T, helpers: { refetch: () => void }) => void
+  /** Optional custom handler when clicking Add button (replaces default Add modal) */
+  onAddClick?: (helpers: { rows: T[]; refetch: () => void }) => void
 }) {
   const toast = useToast()
 
@@ -184,7 +188,7 @@ export function CrudPage<T extends Row>({
       <PageHeader
         title={title}
         subtitle={subtitle}
-        actions={<>{headerExtra}<Button icon={<Plus size={16} />} onClick={openNew}>Add {entity}</Button></>}
+        actions={<>{headerExtra}<Button icon={<Plus size={16} />} onClick={() => (onAddClick ? onAddClick({ rows, refetch: () => apiHook?.refetch() }) : openNew())}>Add {entity}</Button></>}
       />
       {stats && <div className="mb-6">{stats(rows)}</div>}
       <DataTable
@@ -196,7 +200,7 @@ export function CrudPage<T extends Row>({
           <>
             {rowActions?.(r, { update, refetch: () => apiHook?.refetch() })}
             {viewRender && <Button size="sm" variant="ghost" aria-label="View" onClick={() => setViewing(r)}><Eye size={15} /></Button>}
-            <Button size="sm" variant="ghost" aria-label="Edit" onClick={() => openEdit(r)}><Pencil size={15} /></Button>
+            <Button size="sm" variant="ghost" aria-label="Edit" onClick={() => (onEditClick ? onEditClick(r, { refetch: () => apiHook?.refetch() }) : openEdit(r))}><Pencil size={15} /></Button>
             <Button size="sm" variant="ghost" aria-label="Delete" className="text-rose-600 hover:bg-rose-50" onClick={() => setDeleting(r)}><Trash2 size={15} /></Button>
           </>
         )}

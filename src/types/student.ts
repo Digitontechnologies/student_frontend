@@ -9,6 +9,8 @@ export interface Payment {
   amount: number
   method: PaymentMethod
   note?: string
+  referenceNo?: string
+  receiptNo?: string
 }
 
 export interface AttendanceRecord {

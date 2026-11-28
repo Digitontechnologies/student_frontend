@@ -1,6 +1,6 @@
 import { CrudPage } from '../components/ui/CrudPage'
 import { Badge } from '../components/ui/Badge'
-import { PrintDoc, Row } from '../components/ui/PrintDoc'
+import { FeeReceipt } from '../components/ui/FeeReceipt'
 import type { Invoice, Receipt, Student } from '../data/mock'
 import { useApiList } from '../hooks/useOptions'
 import { fmtDate, money, today } from '../lib/utils'
@@ -28,13 +28,7 @@ export default function Receipts() {
         { name: 'date', label: 'Date', type: 'date' },
         { name: 'status', label: 'Status', type: 'select', options: ['Issued', 'Cancelled'] },
       ]}
-      viewRender={(r) => (
-        <PrintDoc title="Payment Receipt">
-          <Row k="Receipt No." v={r.id} /><Row k="Date" v={fmtDate(r.date)} /><Row k="Received from" v={r.student} />
-          <Row k="Against invoice" v={r.invoice} /><Row k="Payment method" v={r.method} />
-          <Row k="Amount received" v={money(r.amount)} bold />
-        </PrintDoc>
-      )}
+      viewRender={(r) => <FeeReceipt receiptOrPaymentId={r.id} />}
     />
   )
 }

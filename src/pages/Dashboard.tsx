@@ -10,7 +10,7 @@ import { Avatar } from '../components/ui/Avatar'
 import { fmtDate, money } from '../lib/utils'
 import { api } from '../lib/api'
 
-const COLORS = ['#5b6cf2', '#8b5cf6', '#38bdf8', '#a78bfa', '#6366f1', '#0ea5e9']
+const COLORS = ['#5B5CE2', '#8B5CF6', '#00BF63', '#a78bfa', '#6366f1', '#00A956']
 
 type DashStats = {
   totalStudents: number
@@ -125,7 +125,7 @@ export default function Dashboard() {
         </Card>
 
         <Card className="lg:col-span-2">
-          <CardHeader title="Recent Admissions" action={<Link to="/students" className="text-sm font-medium text-brand-600 hover:underline">View all</Link>} />
+          <CardHeader title="Recent Admissions" action={<Link to="/students" className="text-sm font-medium text-brand-600 hover:text-brand-700 hover:underline">View all</Link>} />
           <ul className="divide-y divide-slate-100 p-2">
             {data.recentStudents.map((s) => (
               <li key={s.id} className="flex items-center gap-3 px-3 py-3">

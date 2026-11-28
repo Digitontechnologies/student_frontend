@@ -2,28 +2,58 @@
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --color-brand-50: #eef2ff;
-  --color-brand-100: #e0e7ff;
-  --color-brand-500: #5b6cf2;
-  --color-brand-600: #4f5be6;
-  --color-brand-700: #4349c9;
-  --color-accent-500: #8b5cf6;
-  --color-accent-600: #7c3aed;
+
+  /* ── Digiton Brand Green ─────────────────────────── */
+  --color-brand-50:  #E8F8F0;
+  --color-brand-100: #d0f1e1;
+  --color-brand-200: #a1e3c3;
+  --color-brand-500: #00BF63;
+  --color-brand-600: #00BF63;
+  --color-brand-700: #00A956;
+
+  /* ── Secondary accent – Indigo (charts/analytics) ── */
+  --color-accent-50:  #eef0ff;
+  --color-accent-100: #e0e3ff;
+  --color-accent-500: #5B5CE2;
+  --color-accent-600: #4a4bd0;
+
+  /* ── Purple (secondary/badges) ──────────────────── */
+  --color-purple-500: #8B5CF6;
+  --color-purple-600: #7c3aed;
 }
 
 body {
   margin: 0;
-  background: #f7f8fc;
-  color: #1e293b;
+  background: #F6F8FC;
+  color: #172033;
   font-family: var(--font-sans);
 }
 
 .scroll-thin::-webkit-scrollbar { width: 6px; height: 6px; }
-.scroll-thin::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+.scroll-thin::-webkit-scrollbar-thumb { background: #E8F8F0; border-radius: 9999px; }
+.scroll-thin::-webkit-scrollbar-thumb:hover { background: #00BF63; }
+
+@page {
+  size: A4 portrait;
+  margin: 12mm;
+}
 
 @media print {
+  body { background: #ffffff !important; }
   body * { visibility: hidden; }
-  .print-area, .print-area * { visibility: visible; }
-  .print-area { position: absolute; left: 0; top: 0; width: 100%; }
+  .print-area, .print-area * {
+    visibility: visible;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
   .no-print { display: none !important; }
 }

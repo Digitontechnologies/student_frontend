@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, CreditCard, Loader2, Pencil, Trash2, SearchX } from 'lucide-react'
+import { ArrowLeft, CreditCard, Download, Loader2, Pencil, Trash2, SearchX } from 'lucide-react'
 import { PageHeader } from '../components/ui/PageHeader'
 import { Button } from '../components/ui/Button'
 import { Badge } from '../components/ui/Badge'
@@ -8,6 +8,7 @@ import { Avatar } from '../components/ui/Avatar'
 import { Card, CardHeader } from '../components/ui/Card'
 import { Modal } from '../components/ui/Modal'
 import { Detail } from '../components/ui/CrudPage'
+import { FeeReceipt } from '../components/ui/FeeReceipt'
 import { StatCard } from '../components/ui/StatCard'
 import { useToast } from '../components/ui/Toast'
 import { StudentForm } from '../components/students/StudentForm'
@@ -16,6 +17,7 @@ import { FeeSummary } from '../components/students/FeeSummary'
 import { useStudents } from '../hooks/useStudents'
 import { attendanceSummary, calcPaid, calcPending } from '../lib/students'
 import type { Batch, Course } from '../data/mock'
+import type { Payment } from '../types/student'
 import { useApiList } from '../hooks/useOptions'
 import { fmtDate, money } from '../lib/utils'
 import { CalendarCheck, UserCheck, UserX, Clock } from 'lucide-react'
@@ -28,6 +30,7 @@ export default function StudentProfile() {
   const courses = useApiList<Course>('/courses')
   const batches = useApiList<Batch>('/batches')
   const [modal, setModal] = useState<'edit' | 'pay' | 'delete' | null>(null)
+  const [receiptPayment, setReceiptPayment] = useState<Payment | null>(null)
   const s = students.find((x) => x.id === id)
 
   if (loading) {
@@ -109,7 +112,7 @@ export default function StudentProfile() {
         ) : (
           <div className="scroll-thin overflow-x-auto p-2">
             <table className="w-full text-left text-sm">
-              <thead className="text-xs uppercase tracking-wide text-slate-500"><tr>{['Payment ID', 'Date', 'Method', 'Note', 'Amount'].map((h) => <th key={h} className="whitespace-nowrap px-4 py-3 font-medium">{h}</th>)}</tr></thead>
+              <thead className="text-xs uppercase tracking-wide text-slate-500"><tr>{['Payment ID', 'Date', 'Method', 'Note', 'Amount', 'Receipt'].map((h) => <th key={h} className="whitespace-nowrap px-4 py-3 font-medium">{h}</th>)}</tr></thead>
               <tbody className="divide-y divide-slate-100">
                 {payments.map((p) => (
                   <tr key={p.id}>
@@ -118,6 +121,16 @@ export default function StudentProfile() {
                     <td className="px-4 py-3">{p.method}</td>
                     <td className="px-4 py-3 text-slate-500">{p.note ?? '—'}</td>
                     <td className="whitespace-nowrap px-4 py-3 font-semibold text-emerald-600">{money(p.amount)}</td>
+                    <td className="whitespace-nowrap px-4 py-3">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        icon={<Download size={14} />}
+                        onClick={() => setReceiptPayment(p)}
+                      >
+                        Receipt
+                      </Button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -198,6 +211,11 @@ export default function StudentProfile() {
             Delete
           </Button>
         </div>
+      </Modal>
+      <Modal open={!!receiptPayment} onClose={() => setReceiptPayment(null)} title="Fee Receipt" wide>
+        {receiptPayment && (
+          <FeeReceipt receiptOrPaymentId={receiptPayment.receiptNo || receiptPayment.id} />
+        )}
       </Modal>
     </>
   )

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
-import { GraduationCap, Loader2, Lock } from 'lucide-react'
+import { Loader2, Lock } from 'lucide-react'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { Field, Input } from '../components/ui/Field'
@@ -31,14 +31,13 @@ export default function Login() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-[#F6F8FC] p-4">
       <Card className="w-full max-w-md p-8">
         <div className="mb-6 flex flex-col items-center text-center">
-          <div className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-brand-500 to-accent-500 text-white shadow-md">
-            <GraduationCap size={26} />
-          </div>
-          <h1 className="mt-4 text-xl font-bold text-slate-900">Institute Pro</h1>
-          <p className="mt-1 text-sm text-slate-500">Sign in to your account to continue</p>
+          <img src="/digiton-logo.png" alt="Digiton Technologies" className="h-12 w-auto max-w-[220px] object-contain" />
+          <h1 className="mt-5 text-xl font-bold text-[#172033]">Institute Pro</h1>
+          <p className="mt-1 text-sm text-[#667085]">by Digiton Technologies</p>
+          <p className="mt-2 text-sm text-[#667085]">Sign in to your account to continue</p>
         </div>
 
         <form onSubmit={submit} className="space-y-4">

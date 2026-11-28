@@ -18,7 +18,7 @@ const opts: { s: Status; cls: string }[] = [
   { s: 'Leave', cls: 'bg-violet-600 text-white' },
 ]
 
-type Person = { id: string; name: string; sub: string }
+type Person = { id: string; name: string; sub: string; admissionDate?: string | null }
 
 function AttendanceSheet({ title, subtitle, groupLabel, apiType }: {
   title: string
@@ -65,19 +65,25 @@ function AttendanceSheet({ title, subtitle, groupLabel, apiType }: {
   const get = (id: string): Status => marks[`${date}|${id}`] ?? 'Present'
   const set = (id: string, s: Status) => setMarks({ ...marks, [`${date}|${id}`]: s })
   const count = (s: Status) => list.filter((p) => get(p.id) === s).length
-  const markAll = (s: Status) => setMarks({ ...marks, ...Object.fromEntries(list.map((p) => [`${date}|${p.id}`, s])) })
+  const markAll = (s: Status) => setMarks({ ...marks, ...Object.fromEntries(
+    list
+      .filter((p) => !(apiType === 'students' && p.admissionDate != null && date < p.admissionDate))
+      .map((p) => [`${date}|${p.id}`, s])
+  ) })
 
   const saveAttendance = async () => {
     if (list.length === 0) {
       toast('No records to save')
       return
     }
-    const records = list.map((p) => ({
-      studentNo: p.id,
-      staffNo: p.id,
-      batchName: p.sub,
-      status: get(p.id),
-    }))
+    const records = list
+      .filter((p) => !(apiType === 'students' && p.admissionDate != null && date < p.admissionDate))
+      .map((p) => ({
+        studentNo: p.id,
+        staffNo: p.id,
+        batchName: p.sub,
+        status: get(p.id),
+      }))
     try {
       await api.post(`/attendance/${apiType}`, { date, records })
       toast(`Attendance saved for ${date}`)
@@ -110,16 +116,26 @@ function AttendanceSheet({ title, subtitle, groupLabel, apiType }: {
           <div className="flex justify-center py-16 text-slate-400"><Loader2 className="animate-spin" size={20} /></div>
         ) : (
           <ul className="divide-y divide-slate-100">
-            {list.map((p) => (
-              <li key={p.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
-                <div className="flex flex-1 items-center gap-3"><Avatar name={p.name} /><div><p className="text-sm font-medium text-slate-800">{p.name}</p><p className="text-xs text-slate-500">{p.id} · {p.sub}</p></div></div>
-                <div className="flex gap-1.5">
-                  {opts.map(({ s, cls }) => (
-                    <button key={s} onClick={() => set(p.id, s)} className={cn('rounded-lg px-3 py-1.5 text-xs font-medium transition cursor-pointer', get(p.id) === s ? cls : 'bg-slate-100 text-slate-600 hover:bg-slate-200')}>{s}</button>
-                  ))}
-                </div>
-              </li>
-            ))}
+            {list.map((p) => {
+              // Only show attendance buttons if the selected date >= student's admission date
+              const notYetJoined = apiType === 'students' && p.admissionDate != null && date < p.admissionDate
+              return (
+                <li key={p.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
+                  <div className="flex flex-1 items-center gap-3"><Avatar name={p.name} /><div><p className="text-sm font-medium text-slate-800">{p.name}</p><p className="text-xs text-slate-500">{p.id} · {p.sub}</p></div></div>
+                  {notYetJoined ? (
+                    <span className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-400">
+                      Joined {p.admissionDate}
+                    </span>
+                  ) : (
+                    <div className="flex gap-1.5">
+                      {opts.map(({ s, cls }) => (
+                        <button key={s} onClick={() => set(p.id, s)} className={cn('rounded-lg px-3 py-1.5 text-xs font-medium transition cursor-pointer', get(p.id) === s ? cls : 'bg-slate-100 text-slate-600 hover:bg-slate-200')}>{s}</button>
+                      ))}
+                    </div>
+                  )}
+                </li>
+              )
+            })}
             {list.length === 0 && (
               <li className="p-10 text-center text-sm text-slate-400">
                 {apiType === 'students'

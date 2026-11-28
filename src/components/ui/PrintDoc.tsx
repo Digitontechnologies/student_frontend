@@ -6,12 +6,9 @@ export function PrintDoc({ title, children }: { title: string; children: ReactNo
   return (
     <div>
       <div className="print-area rounded-xl border border-slate-200 p-6">
-        <div className="mb-6 flex items-start justify-between border-b border-slate-100 pb-4">
-          <div>
-            <p className="text-xl font-bold text-slate-900">Institute <span className="text-brand-600">Pro</span></p>
-            <p className="text-xs text-slate-500">12 MG Road, Bengaluru · +91 80000 00000</p>
-          </div>
-          <p className="text-lg font-semibold uppercase tracking-wide text-slate-700">{title}</p>
+        <div className="mb-6 flex items-center justify-between border-b border-[#E7EAF0] pb-4">
+          <img src="/digiton-logo.png" alt="Digiton Technologies" className="h-10 w-auto object-contain" />
+          <p className="text-lg font-semibold uppercase tracking-wide text-[#172033]">{title}</p>
         </div>
         {children}
       </div>
