@@ -3,6 +3,7 @@ import { Loader2 } from 'lucide-react'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { AppLayout } from './components/layout/AppLayout'
 import Login from './pages/Login'
+import PublicRegister from './pages/PublicRegister'
 import Dashboard from './pages/Dashboard'
 import Students from './pages/Students'
 import StudentProfile from './pages/StudentProfile'
@@ -39,6 +40,7 @@ export default function App() {
     <AuthProvider>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<PublicRegister />} />
         <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
           <Route index element={<Dashboard />} />
           <Route path="students" element={<Students />} />

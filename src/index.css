@@ -35,25 +35,49 @@ body {
 
 @page {
   size: A4 portrait;
-  margin: 12mm;
+  margin: 10mm 12mm;
+}
+
+@page invoice {
+  size: A4 portrait;
+  margin: 0;
 }
 
 @media print {
-  body { background: #ffffff !important; }
-  body * { visibility: hidden; }
-  .print-area, .print-area * {
-    visibility: visible;
+  html, body {
+    background: #ffffff !important;
+    height: auto !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  #root {
+    display: none !important;
+  }
+  .print-only-root {
+    display: block !important;
+    width: 100%;
+    page-break-inside: avoid;
+    break-inside: avoid;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
-  .print-area {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
+  .invoice-letterhead-page {
+    page: invoice;
+    width: 210mm !important;
+    height: 296mm !important;
+    max-width: none !important;
+    margin: 0 !important;
     border: none !important;
+    border-radius: 0 !important;
     box-shadow: none !important;
-    padding: 0 !important;
+    overflow: hidden !important;
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+  .print-only-root * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
   .no-print { display: none !important; }
 }

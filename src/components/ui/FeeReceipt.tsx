@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Download, Loader2, Printer } from 'lucide-react'
 import { api } from '../../lib/api'
 import { fmtDate, money } from '../../lib/utils'
@@ -23,7 +24,16 @@ export type ReceiptDetail = {
   transactionId: string
   paymentNotes: string
   paymentStatus: 'Paid' | 'Partially Paid' | 'Pending'
+  termsAndConditions?: string[]
 }
+
+const DEFAULT_TERMS = [
+  'Fees once paid are strictly non-refundable.',
+  'Course fees must be paid as per the agreed payment schedule.',
+  'Students are responsible for clearing all pending fees within the specified due date.',
+  'Please retain this receipt for future reference.',
+  'For any payment-related queries, contact the institute administration.',
+]
 
 const ONES = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
   'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen']
@@ -61,9 +71,18 @@ export function amountInWords(amount: number): string {
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between gap-3 py-1 text-xs">
-      <span className="text-[#667085]">{label}</span>
-      <span className="text-right font-medium text-[#172033]">{value || '—'}</span>
+    <div className="flex items-baseline justify-between gap-4 py-1 text-xs">
+      <span className="shrink-0 font-medium text-[#667085]">{label}</span>
+      <span className="text-right font-semibold text-[#172033]">{value || '—'}</span>
+    </div>
+  )
+}
+
+function SectionHeading({ title }: { title: string }) {
+  return (
+    <div className="mb-2 flex items-center gap-2">
+      <span className="h-3.5 w-1 rounded-full bg-[#00BF63]" />
+      <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#172033]">{title}</h3>
     </div>
   )
 }
@@ -106,108 +125,163 @@ export function FeeReceipt({ receiptOrPaymentId }: { receiptOrPaymentId: string 
     )
   }
 
-  return (
-    <div>
-      <div className="print-area rounded-2xl border border-[#E7EAF0] bg-white p-6 text-[#172033]">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#E7EAF0] pb-4">
-          <img src="/digiton-logo.png" alt="Digiton Technologies" className="h-10 w-auto object-contain" />
+  const terms = data.termsAndConditions?.length ? data.termsAndConditions : DEFAULT_TERMS
+
+  const receiptBody = (
+    <div
+      className="mx-auto w-full max-w-[760px] overflow-hidden rounded-2xl border border-[#E7EAF0] bg-white text-[#172033] print:max-w-none print:rounded-none print:border-[#E7EAF0]"
+      style={{ fontFamily: '"Inter", ui-sans-serif, system-ui, -apple-system, sans-serif' }}
+    >
+      {/* Digiton Green Top Accent */}
+      <div className="h-1.5 w-full bg-[#00BF63]" />
+
+      <div className="p-6 print:p-5">
+        {/* Corporate Header */}
+        <div className="flex items-center justify-between gap-4 border-b border-[#E7EAF0] pb-4">
+          <div className="flex items-center gap-3">
+            <img src="/digiton-logo.png" alt="Digiton Technologies" className="h-10 w-auto object-contain" />
+          </div>
           <div className="text-right">
-            <p className="text-base font-bold uppercase tracking-wider text-[#172033]">Fee Receipt</p>
-            <p className="mt-0.5 text-xs font-semibold text-[#00A956]">{data.receiptNo}</p>
+            <span className="inline-block rounded-full bg-[#E8F8F0] px-3 py-0.5 text-[10px] font-bold uppercase tracking-widest text-[#00A956]">
+              Official Fee Receipt
+            </span>
+            <p className="mt-1 text-base font-bold tracking-tight text-[#172033]">{data.receiptNo}</p>
           </div>
         </div>
 
         {/* 1. Receipt Information & 2. Student Information */}
-        <div className="mt-5 grid gap-4 sm:grid-cols-2">
-          <div className="rounded-xl border border-[#E7EAF0] bg-[#F6F8FC] p-3.5">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[#667085]">
-              Receipt Information
-            </p>
-            <InfoRow label="Receipt Number" value={data.receiptNo} />
-            <InfoRow label="Payment ID" value={data.paymentId} />
-            <InfoRow label="Payment Date" value={fmtDate(data.paymentDate)} />
-            <InfoRow label="Branch Name" value={data.branchName} />
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 print:grid-cols-2">
+          <div className="rounded-xl border border-[#E7EAF0] bg-[#F6F8FC] px-4 py-3">
+            <SectionHeading title="Receipt Information" />
+            <div className="divide-y divide-[#E7EAF0]/70">
+              <InfoRow label="Receipt Number" value={data.receiptNo} />
+              <InfoRow label="Payment ID" value={data.paymentId} />
+              <InfoRow label="Payment Date" value={fmtDate(data.paymentDate)} />
+              <InfoRow label="Branch Name" value={data.branchName} />
+            </div>
           </div>
 
-          <div className="rounded-xl border border-[#E7EAF0] bg-[#F6F8FC] p-3.5">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[#667085]">
-              Student Information
-            </p>
-            <InfoRow label="Student Name" value={data.studentName} />
-            <InfoRow label="Student ID" value={data.studentId} />
-            <InfoRow label="Course Name" value={data.courseName} />
-            <InfoRow label="Batch Name" value={data.batchName} />
+          <div className="rounded-xl border border-[#E7EAF0] bg-[#F6F8FC] px-4 py-3">
+            <SectionHeading title="Student Information" />
+            <div className="divide-y divide-[#E7EAF0]/70">
+              <InfoRow label="Student Name" value={data.studentName} />
+              <InfoRow label="Student ID" value={data.studentId} />
+              <InfoRow label="Course Name" value={data.courseName} />
+              <InfoRow label="Batch Name" value={data.batchName} />
+            </div>
           </div>
         </div>
 
         {/* 3. Fee Summary */}
-        <div className="mt-5 rounded-xl border border-[#E7EAF0] overflow-hidden">
-          <div className="border-b border-[#E7EAF0] bg-[#F6F8FC] px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-[#667085]">
-            Fee Summary
+        <div className="mt-4 overflow-hidden rounded-xl border border-[#E7EAF0]">
+          <div className="border-b border-[#E7EAF0] bg-[#F6F8FC] px-4 py-2.5">
+            <div className="flex items-center gap-2">
+              <span className="h-3.5 w-1 rounded-full bg-[#00BF63]" />
+              <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#172033]">Fee Summary</h3>
+            </div>
           </div>
-          <div className="divide-y divide-[#E7EAF0] text-sm">
-            <div className="flex justify-between px-4 py-2.5">
-              <span className="text-[#667085]">Total Course Fee</span>
-              <span className="font-medium">{money(data.totalCourseFee)}</span>
+          <div className="divide-y divide-[#E7EAF0] text-[13px]">
+            <div className="flex items-center justify-between px-4 py-2">
+              <span className="font-medium text-[#667085]">Total Course Fee</span>
+              <span className="font-semibold tabular-nums text-[#172033]">{money(data.totalCourseFee)}</span>
             </div>
-            <div className="flex justify-between px-4 py-2.5">
-              <span className="text-[#667085]">Previous Paid Amount</span>
-              <span className="font-medium">{money(data.previousPaidAmount)}</span>
+            <div className="flex items-center justify-between px-4 py-2">
+              <span className="font-medium text-[#667085]">Previous Paid Amount</span>
+              <span className="font-semibold tabular-nums text-[#172033]">{money(data.previousPaidAmount)}</span>
             </div>
-            <div className="flex justify-between bg-[#E8F8F0] px-4 py-3 font-bold text-[#00A956]">
-              <span>Current Payment Amount</span>
-              <span className="text-base">{money(data.currentPaymentAmount)}</span>
+            <div className="flex items-center justify-between border-l-4 border-l-[#00BF63] bg-[#E8F8F0] px-4 py-2.5">
+              <span className="text-sm font-bold text-[#00A956]">Current Payment Amount</span>
+              <span className="text-base font-bold tabular-nums text-[#00A956]">{money(data.currentPaymentAmount)}</span>
             </div>
-            <div className="flex justify-between px-4 py-2.5">
-              <span className="text-[#667085]">Total Paid Till Date</span>
-              <span className="font-semibold text-[#172033]">{money(data.totalPaidTillDate)}</span>
+            <div className="flex items-center justify-between px-4 py-2">
+              <span className="font-medium text-[#667085]">Total Paid Till Date</span>
+              <span className="font-bold tabular-nums text-[#172033]">{money(data.totalPaidTillDate)}</span>
             </div>
-            <div className="flex justify-between px-4 py-2.5">
-              <span className="text-[#667085]">Remaining Pending Balance</span>
-              <span className={data.remainingPendingBalance > 0 ? 'font-semibold text-rose-600' : 'font-semibold text-[#00A956]'}>
-                {money(data.remainingPendingBalance)}
+            <div
+              className={`flex items-center justify-between px-4 py-2.5 ${
+                data.remainingPendingBalance > 0 ? 'bg-rose-50/70' : 'bg-[#E8F8F0]/40'
+              }`}
+            >
+              <span className="font-bold text-[#172033]">Remaining Pending Balance</span>
+              <span
+                className={`text-sm font-bold tabular-nums ${
+                  data.remainingPendingBalance > 0 ? 'text-rose-600' : 'text-[#00A956]'
+                }`}
+              >
+                {data.remainingPendingBalance > 0 ? money(data.remainingPendingBalance) : `${money(0)} (Cleared)`}
               </span>
             </div>
           </div>
         </div>
 
         {/* 4. Payment Information */}
-        <div className="mt-5 rounded-xl border border-[#E7EAF0] p-3.5">
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[#667085]">
-            Payment Information
-          </p>
-          <div className="grid gap-x-6 sm:grid-cols-2">
+        <div className="mt-4 rounded-xl border border-[#E7EAF0] px-4 py-3">
+          <SectionHeading title="Payment Information" />
+          <div className="grid gap-x-6 divide-y divide-[#E7EAF0]/70 sm:grid-cols-2 sm:divide-y-0 print:grid-cols-2">
             <InfoRow label="Payment Method" value={data.paymentMethod} />
             <InfoRow label="Transaction ID / Reference" value={data.transactionId || '—'} />
           </div>
-          <InfoRow label="Payment Notes" value={data.paymentNotes || '—'} />
+          <div className="border-t border-[#E7EAF0]/70 pt-1 mt-1">
+            <InfoRow label="Payment Notes" value={data.paymentNotes || '—'} />
+          </div>
         </div>
 
-        {/* 5. Receipt Footer */}
-        <div className="mt-5 border-t border-[#E7EAF0] pt-4">
-          <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-            <div>
-              <span className="text-[#667085]">Amount in Words: </span>
-              <span className="font-semibold text-[#172033]">{amountInWords(data.currentPaymentAmount)}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-[#667085]">Status:</span>
-              <Badge>{data.paymentStatus}</Badge>
-            </div>
+        {/* Amount in Words & Payment Status */}
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#E7EAF0] bg-[#F6F8FC] px-4 py-2.5">
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#667085]">Amount Received in Words</p>
+            <p className="mt-0.5 text-xs font-semibold text-[#172033]">{amountInWords(data.currentPaymentAmount)}</p>
           </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#667085]">Payment Status</span>
+            <Badge>{data.paymentStatus}</Badge>
+          </div>
+        </div>
 
-          <div className="mt-6 flex items-end justify-between gap-4 pt-2">
-            <p className="max-w-xs text-[11px] text-[#667085]">
-              Thank you for your payment. This is an official fee receipt issued by Digiton Technologies.
+        {/* Terms & Conditions */}
+        <div className="mt-4 rounded-xl border border-[#E7EAF0] px-4 py-3">
+          <SectionHeading title="Terms & Conditions" />
+          <ol className="space-y-1 text-[11px] leading-relaxed text-[#667085]">
+            {terms.map((clause, idx) => {
+              const isNonRefundable = /non[- ]?refundable/i.test(clause)
+              return (
+                <li
+                  key={idx}
+                  className={
+                    isNonRefundable
+                      ? 'rounded-r-md border-l-2 border-amber-500 bg-amber-50 px-2.5 py-1 font-semibold text-[#172033]'
+                      : 'px-1'
+                  }
+                >
+                  {idx + 1}. {clause}
+                </li>
+              )
+            })}
+          </ol>
+        </div>
+
+        {/* 5. Receipt Footer & Authorized Signature */}
+        <div className="mt-4 flex items-end justify-between gap-6 border-t border-[#E7EAF0] pt-4">
+          <div className="max-w-sm">
+            <p className="text-xs font-semibold text-[#172033]">Thank you for your payment!</p>
+            <p className="mt-0.5 text-[11px] leading-snug text-[#667085]">
+              This is an official computer-generated fee receipt issued by Digiton Technologies.
             </p>
-            <div className="text-right">
-              <div className="mb-1 h-8 w-40 border-b border-dashed border-[#667085]/50" />
-              <p className="text-[11px] font-medium text-[#667085]">Authorized Signature</p>
-            </div>
+          </div>
+          <div className="shrink-0 text-right">
+            <div className="mb-1.5 h-8 w-44 border-b border-dashed border-[#667085]/60" />
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-[#172033]">Authorized Signature</p>
+            <p className="text-[10px] text-[#667085]">Digiton Technologies</p>
           </div>
         </div>
       </div>
+    </div>
+  )
+
+  return (
+    <div>
+      {receiptBody}
+      {createPortal(<div className="print-only-root hidden">{receiptBody}</div>, document.body)}
 
       {/* Print / Download PDF Actions */}
       <div className="no-print mt-4 flex justify-end gap-2">
